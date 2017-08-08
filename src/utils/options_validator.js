@@ -28,10 +28,10 @@ let validateOptions = ( options, requirements ) => {
     }
 
     requirements.forEach( requirement => {
-        let requirement_name        = requirements.name;
+        let requirement_name        = requirement.name;
         let requirement_description = requirement.description;
         let requirement_location    = requirement.location;
-        let validateRequirement    = requirement.validate;
+        let validateRequirement     = requirement.validate;
         let value                   = dot.pick( requirement_location, options );
 
         if( !validateRequirement( value ) ) {
