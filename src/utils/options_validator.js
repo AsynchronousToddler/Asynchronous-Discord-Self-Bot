@@ -13,6 +13,14 @@ const DEFAULT_OPTIONS_REQUIREMENTS = [
             return typeof value === 'string' && value.length > 0;
         },
         description : 'Must be a non-empty string'
+    },
+    {
+        name        : 'Update Interval',
+        location    : 'update_interval',
+        validate    : ( value ) => {
+            return !isNaN( parseFloat( value ) ) && isFinite( value ) && value > 0;
+        },
+        description : 'Must be a number above 0'
     }
 ];
 
@@ -34,7 +42,7 @@ let validateOptions = ( options, requirements ) => {
         let validateRequirement     = requirement.validate;
         let value                   = dot.pick( requirement_location, options );
 
-        if( !validateRequirement( value ) ) {
+        if ( !validateRequirement( value ) ) {
             let error_message = `${requirement_name}[${requirement_location}]: ${requirement_description}`;
 
             errors.push( error_message );
@@ -44,5 +52,5 @@ let validateOptions = ( options, requirements ) => {
     return errors.length > 0 ? errors : true;
 };
 
-module.exports.DEFAULT_OPTIONS_REQUIREMENTS    = DEFAULT_OPTIONS_REQUIREMENTS;
-module.exports.validateOptions                 = validateOptions;
+module.exports.DEFAULT_OPTIONS_REQUIREMENTS = DEFAULT_OPTIONS_REQUIREMENTS;
+module.exports.validateOptions              = validateOptions;

@@ -38,5 +38,9 @@ fs.readFile( full_config_file_path, ( file_read_error, file_content )=> {
         process.exit( 1 );
     } );
 
+    app.on( 'discord:ready', ( ) => {
+      console.log( 'Discord logged in and ready' );
+    } );
+
     app.start( );
 } );
