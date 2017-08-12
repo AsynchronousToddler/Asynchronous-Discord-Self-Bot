@@ -3,9 +3,12 @@
  */
 'use strict';
 
+const CommandsHandler  = require( './commands.js' );
+const CommandPSN       = require( './commands/psn.js' );
 const DiscordClient    = require( 'discord.js' ).Client;
 const dot              = require( 'dot-object' );
 const EventEmitter     = require( 'events' ).EventEmitter;
+const MessagesHandler  = require( './messages.js' );
 const PSNjs            = require( 'PSNjs' );
 const request          = require( 'request' );
 const OptionsValidator = require( './utils/options_validator.js' );
@@ -16,6 +19,8 @@ const OPTION_UPDATE_INTERVAL = 'update_interval';
 const OPTION_PSN_EMAIL       = 'psn.email';
 const OPTION_PSN_PASSWORD    = 'psn.password';
 const OPTION_PSN_ID          = 'psn.id';
+
+const DEFAULT_COMMAND_NAME   = 'help';
 
 class AsynchronousSelfBot extends EventEmitter {
     constructor( options ) {
@@ -29,7 +34,11 @@ class AsynchronousSelfBot extends EventEmitter {
             throw new Error( error_message );
         }
 
-        this.options = options;
+        this.options           = options;
+        this.commands          = [];
+        this.message_listeners = {};
+
+        CommandsHandler.registerCommand(new CommandPSN( ), this.commands );
 
         this.setupDiscord();
     }
@@ -54,7 +63,6 @@ class AsynchronousSelfBot extends EventEmitter {
     }
 
     update( ) {
-        console.log( 'Updating' );
         this.updatePSN( );
     }
 
@@ -80,6 +88,8 @@ class AsynchronousSelfBot extends EventEmitter {
                this.discord_client.user.setGame( game_status )
            } else if( this.psn_updated_game ) {
                this.discord_client.user.setGame( );
+
+               this.psn_updated_game = false;
            }
         } );
     }
@@ -98,9 +108,83 @@ class AsynchronousSelfBot extends EventEmitter {
         }
 
         //Only respond to our own messages
-        if( message.author.id.toString( ) !== this.discord_client.user.id.toString( ) ) {
+        if( !MessagesHandler.isAuthor( message, this ) ) {
             return;
         }
+
+        if ( CommandsHandler.isCommand( message ) ) {
+            let command_parts = CommandsHandler.prepareMessageAsCommand( message ); //Prepare the message as a command. Typically splitting it up into an array and removing the command prefix
+            let command_name  = command_parts.shift( ); //Remove the first "parameter" as it's the name of the command
+            let command       = CommandsHandler.findCommand( command_name || DEFAULT_COMMAND_NAME, this.commands ); //Find the command from the list of registered command
+
+            if( command !== null ) {
+                return this.emit( 'discord:command', command, command_parts, message );
+            }
+
+            return this.onEventDiscordCommand( command, command_parts, message );
+        }
+    }
+
+    onEventDiscordCommand( command, parameters, message ) {
+        if( !command || !message ) {
+            this.emit( 'discord:error', new Error( 'Received invalid command trigger: Missing command or message' ) );
+        }
+
+        let command_can_run_result = command.can_run( message );
+
+        //Check that we can run the command or not. If we can, the result will be a boolean true. If not, it'll be a string with the error message.
+        if( command_can_run_result !== true ) {
+            let response = {
+                message : command_can_run_result,
+                error   : true
+            };
+
+            return CommandsHandler.respondToCommand( command, message, response, this );
+        }
+
+        //Create a "all around" handler for the command response to log the error and respond to the command if need be
+        let command_responder = ( error, response ) => {
+            if( error ) {
+                console.log( error );
+            }
+
+            if( response ) {
+                CommandsHandler.respondToCommand( command, message, response, this );
+            }
+        };
+
+        //Invoke the command with the parameters, the original message object and the "client" and await response
+        command.invoke( parameters, message, this ).then( response => {
+            command_responder( undefined, response );
+        } ).catch( command_responder );
+    }
+
+    onEventDiscordRemoveReaction( reaction, user ) {
+        //Only respond to our own messages
+        if( !MessagesHandler.isAuthor( reaction.message, this ) ) {
+            return;
+        }
+
+        let emoji = reaction.emoji.name;
+        let type  = 'reaction_remove_' + emoji;
+        let message = reaction.message;
+        let event_listeners = MessagesHandler.getMessageListeners( message, type, this );
+
+        if( event_listeners.length > 0 ) {
+            message.react( emoji );
+
+            event_listeners.forEach( listener => {
+                try {
+                  let handler = listener.handler;
+                  let data    = listener.data;
+
+                  handler( data, message, this );
+                } catch( e ) {
+                    console.log( e );
+                }
+            } );
+        }
+
     }
 
     onEventPSNReady( ) {
@@ -121,6 +205,14 @@ class AsynchronousSelfBot extends EventEmitter {
         this.discord_client.on( 'message', ( message ) => {
             this.onEventDiscordMessageReceived( message );
         } );
+
+        this.discord_client.on( 'messageReactionRemove', ( reaction, user ) => {
+            this.onEventDiscordRemoveReaction( reaction, user );
+        } );
+
+        this.on( 'discord:command', ( command, parameters, message ) => {
+            this.onEventDiscordCommand( command, parameters, message );
+        } );
     }
 
     setupPSN( ) {
@@ -133,8 +225,7 @@ class AsynchronousSelfBot extends EventEmitter {
 
         this.psn = new PSNjs(  {
             email    : email,
-            password : password,
-            debug    : true
+            password : password
         } );
 
         this.emit( 'psn:ready', true );
