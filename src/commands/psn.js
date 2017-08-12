@@ -8,8 +8,8 @@ const Command = require( '../command.js' );
 const dot     = require( 'dot-object' );
 
 const NAME          = 'psn';
-const HELP_SIMPLE   = 'Shows a small info message';
-const HELP_DETAILED = 'Shows a small info message';
+const HELP_SIMPLE   = 'Get\'s a user from PSN';
+const HELP_DETAILED = 'Get\'s and displays you information about a user you want to lookup';
 const CAN_RUN       = undefined;
 
 class CommandPSN extends Command {
