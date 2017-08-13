@@ -39,7 +39,15 @@ fs.readFile( full_config_file_path, ( file_read_error, file_content )=> {
     } );
 
     app.on( 'discord:ready', ( ) => {
-      console.log( 'Discord logged in and ready' );
+        console.log( 'MODULE\t[Discord]\t| Logged in and ready' );
+    } );
+
+    app.on( 'psn:ready', ( ) => {
+        console.log( 'MODULE\t[PSN API]\t| Logged in and ready' );
+    } );
+
+    app.on( 'http:ready', ( port ) => {
+        console.log( 'MODULE\t[HTTP API]\t| Setup and listening on ' + port );
     } );
 
     app.start( );

@@ -3,7 +3,7 @@
  */
 'use strict';
 
-const Colours = require( '../../lib/Colours.json' );
+const Colours = require( '../../lib/colours.json' );
 const Command = require( '../command.js' );
 const dot     = require( 'dot-object' );
 

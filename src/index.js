@@ -4,10 +4,12 @@
 'use strict';
 
 const CommandsHandler  = require( './commands.js' );
+const CommandColour    = require( './commands/colour.js' );
 const CommandPSN       = require( './commands/psn.js' );
 const DiscordClient    = require( 'discord.js' ).Client;
 const dot              = require( 'dot-object' );
 const EventEmitter     = require( 'events' ).EventEmitter;
+const HTTPAPI          = require( './http_api.js' );
 const MessagesHandler  = require( './messages.js' );
 const PSNjs            = require( 'PSNjs' );
 const request          = require( 'request' );
@@ -38,17 +40,29 @@ class AsynchronousSelfBot extends EventEmitter {
         this.commands          = [];
         this.message_listeners = {};
 
+        CommandsHandler.registerCommand(new CommandColour( ), this.commands );
         CommandsHandler.registerCommand(new CommandPSN( ), this.commands );
 
         this.setupDiscord();
     }
 
     start( ) {
+        let http_options = dot.pick( 'http', this.options );
+
+        if( http_options ) {
+            this.setupHTTP( );
+        }
+
+        http_options = http_options || { };
+
+        if( http_options.http_only ) {
+            return;
+        }
+
         this.discord_client.login( dot.pick( OPTION_DISCORD_TOKEN, this.options ) );
 
         this.on( 'discord:ready', ( ) => {
             this.setupPSN( );
-
             this.setupUpdater();
         } );
     }
@@ -229,6 +243,18 @@ class AsynchronousSelfBot extends EventEmitter {
         } );
 
         this.emit( 'psn:ready', true );
+    }
+
+    setupHTTP( ) {
+        let options = dot.pick( 'http', this.options ) || { };
+        let port    = options.port;
+        this.http_api = new HTTPAPI( options , this );
+
+        this.http_api.on( 'listening', ( ) => {
+            this.emit( 'http:ready', port );
+        } );
+
+        this.http_api.listen( port );
     }
 
 }
