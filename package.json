@@ -1,6 +1,6 @@
 {
   "name"         : "asynchronous-discord-selfbot",
-  "version"      : "0.1.0",
+  "version"      : "1.0.0",
   "description"  : "A SelfBot I made for my Discord account AsynchronousToddler",
   "private"      : true,
   "main"         : "src/index.js",
