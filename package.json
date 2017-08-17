@@ -1,0 +1,30 @@
+{
+  "name"         : "asynchronous-discord-selfbot",
+  "version"      : "1.0.0",
+  "description"  : "A SelfBot I made for my Discord account AsynchronousToddler",
+  "private"      : true,
+  "main"         : "src/index.js",
+  "scripts"      : {
+    "test" : "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository"   : {
+    "type" : "git",
+    "url"  : "git+https://github.com/AsynchronousToddler/Asynchronous-Discord-Self-Bot.git"
+  },
+  "author"       : "Liara A. M. Rørvig",
+  "license"      : "MIT",
+  "bugs"         : {
+    "url" : "https://github.com/AsynchronousToddler/Asynchronous-Discord-Self-Bot/issues"
+  },
+  "homepage"     : "https://github.com/AsynchronousToddler/Asynchronous-Discord-Self-Bot#readme",
+  "dependencies" : {
+    "PSNjs"          : "^0.1.2",
+    "discord.js"     : "^11.1.0",
+    "dot-object"     : "^1.6.0",
+    "request"        : "^2.81.0",
+    "restify"        : "^5.1.0",
+    "restify-errors" : "^5.0.0",
+    "semver"         : "^5.4.1",
+    "sharp"          : "^0.18.2"
+  }
+}
