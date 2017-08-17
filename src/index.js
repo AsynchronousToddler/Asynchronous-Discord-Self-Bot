@@ -5,6 +5,7 @@
 
 const CommandsHandler  = require( './commands.js' );
 const CommandColour    = require( './commands/colour.js' );
+const CommandLMGTFY    = require( './commands/lmgtfy.js' );
 const CommandPSN       = require( './commands/psn.js' );
 const DiscordClient    = require( 'discord.js' ).Client;
 const dot              = require( 'dot-object' );
@@ -41,6 +42,7 @@ class AsynchronousSelfBot extends EventEmitter {
         this.message_listeners = {};
 
         CommandsHandler.registerCommand(new CommandColour( ), this.commands );
+        CommandsHandler.registerCommand(new CommandLMGTFY( ), this.commands );
         CommandsHandler.registerCommand(new CommandPSN( ), this.commands );
 
         this.setupDiscord();
